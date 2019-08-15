@@ -14,10 +14,6 @@
                 color:#000;
                 font-size: 20px;
             }
-            .normal{
-                padding-bottom:5px;
-                color:#ccc;
-            }
         </style>
     </head>
 
@@ -40,43 +36,49 @@
                     return raw;
                 };
   
-
-                var card0Item = new Ext.form.FieldSet({   
-                    id:'card0Item',
-                    xtype:'fieldset',
-                    title:'Q1: 🍅番茄酱属于以下哪种垃圾？（单选）',
-                    border:false,
-                    layout:'anchor',
-                    items:[createRadio('湿垃圾'),createRadio('干垃圾'),createRadio('有害垃圾'),createRadio('可回收物')]
+                var createCard0Item = (id) =>{
+                    return new Ext.form.FieldSet({
+                        id:id,
+                        title:'Q1: 🍅番茄酱属于以下哪种垃圾？（单选）',
+                        border:false,
+                        layout:'anchor',
+                        items:[createRadio('湿垃圾'),createRadio('干垃圾'),createRadio('有害垃圾'),createRadio('可回收物')]
                 
-                });
+                    });
+                }
 
-                var card1Item = new Ext.form.FieldSet({
-                    id:'card1Item',
-                    xtype:'fieldset',
-                    title:'Q50: 王大叔出门遛狗后，哪些是正确处理狗粑粑的方法？（多选）',
-                    border:false,
-                    layout:'anchor',
-                    items:[createCheck('把粑粑用废报纸包好带回家冲掉'),
-                    createCheck('受污染的报纸按有害垃圾处理'),
-                    createCheck('没受污染的报纸按可回收垃圾处理'),
-                    createCheck('受污染的报纸浸水后当是垃圾处理')]
-                });
+                var createCard1Item = (id) =>{
+                    return new Ext.form.FieldSet({
+                        id:id,
+                        title:'Q50: 王大叔出门遛狗后，哪些是正确处理狗粑粑的方法？（多选）',
+                        border:false,
+                        layout:'anchor',
+                        items:[createCheck('把粑粑用废报纸包好带回家冲掉'),
+                        createCheck('受污染的报纸按有害垃圾处理'),
+                        createCheck('没受污染的报纸按可回收垃圾处理'),
+                        createCheck('受污染的报纸浸水后当是垃圾处理')]
+                    });
+                }
+                 
                 var getQ1Answer = () => {
-                    let temp = card0Item.items.items.filter(item => item.checked);
-                    if(temp == null)
-                        return [];
+                    let temp = Ext.getCmp('card-0').get('card0Item').items.items.filter(item => item.checked);
+                    if(temp == null || temp == undefined || temp.length == 0)
+                        return undefined;
                     let result = temp.map(item => {
-                        let temp = createRadio(item.boxLabel);
+                        let temp = new Ext.form.Radio({
+                            boxLabel:item.boxLabel
+                        });
                         temp.checked = true;
                         return temp;
                     });
-                    return result;
+
+                    return result[0];
                 }
                 var getQ50Answer = () =>{
-                    let temp =  card1Item.items.items.filter(item => item.checked);
-                    if(temp == null)
-                        return [];
+                    console.log(Ext.getCmp('card-1').items.get('card1Item').items.items);
+                    let temp =  Ext.getCmp('card-1').items.get('card1Item').items.items.filter(item => item.checked);
+                    if(temp == null || temp == undefined || temp.length == 0)
+                        return undefined;
                     let result = temp.map(item => {
                         let temp = createCheck(item.boxLabel);
                         temp.checked = true;
@@ -88,33 +90,34 @@
 
                 
                 var createCard3 = () => {
-                    let card2 = Ext.getCmp('card-2');
-
+                    
                     let items1 = getQ1Answer();
                     let items2 = getQ50Answer();
-                    let card0ItemCopy = new Ext.form.FieldSet({   
-                        id:'card0ItemCopy',
-                        xtype:'fieldset',
-                        title:'Q1: 🍅番茄酱属于以下哪种垃圾？（单选）',
-                        border:false,
-                        layout:'anchor',
-                        items:items1                 
-                    });
-                    let card1ItemCopy = new Ext.form.FieldSet({
-                        id:'card1ItemCopy',
-                        xtype:'fieldset',
-                        title:'Q50: 王大叔出门遛狗后，哪些是正确处理狗粑粑的方法？（多选）',
-                        border:false,
-                        layout:'anchor',
-                        items:items2
-                    });
+
+                    let card0ItemCopy = createCard0Item('card0ItemCopy');
+                    let card1ItemCopy = createCard1Item('card1ItemCopy');
+
+                    card0ItemCopy.items.clear();
+                    card1ItemCopy.items.clear();
+                    if(items1 != undefined){
+                        card0ItemCopy.items.add(items1);
+                    }
+                        
+                    if(items2 != undefined)
+                        items2.forEach(item => card1ItemCopy.items.add(item));
+
+                    let card2 = Ext.getCmp('card-2');
+
 
                     card0ItemCopy.disabled = true;
                     card1ItemCopy.disabled = true;
-                    let card2Item = new Ext.Panel({
+
+                    let card2Item = new Ext.form.FieldSet({
+                        id:'card2Item',
                         width:400,
                         height:400,
-                        items:[card0ItemCopy,card1ItemCopy],
+                        items:[],
+                        border:false,
                         buttons:[
                             {
                                 text:'submit',
@@ -123,7 +126,7 @@
                                         Ext.Msg.alert('Message', 'Congratulation');
                                         //Ajax提交表单
 
-                                        /*Ext.Ajax.request({
+                                       /* Ext.Ajax.request({
                                         method:'POST', 
                                         form: 'resumeForm', 
                                         url: 'resume',
@@ -134,14 +137,17 @@
                                         }); */
                                     }
                                 }
-                            }
-                            ]
+                            }]
                     });
+                    card2Item.items.clear();
+                    card2Item.items.add('card0ItemCopy',card0ItemCopy);
+                    card2Item.items.add('card1ItemCopy',card1ItemCopy);
+                    
+                    card2.items.add('card2Item',card2Item);
 
-                    card2.add(card2Item);
-
+                    card2.doLayout();
                 }
-
+                
                 var navHandler = function(direction){
                     var wizard = Ext.getCmp('wizard').layout;
                     var prev = Ext.getCmp('move-prev');
@@ -160,8 +166,7 @@
 
                         }else{
                             wizard.setActiveItem(2);
-                            next.setDisabled(true);
-                            
+                            next.setDisabled(true);  
                             createCard3();
                         }
                     }else if(activeId == 'card-2'){
@@ -197,14 +202,15 @@
                     }],
                     items: [{
                         id: 'card-0',
-                        items:[card0Item]
+                        items:[createCard0Item('card0Item')]
                         
                     },{
                         id: 'card-1',
-                        items:[card1Item]
+                        items:[createCard1Item('card1Item')]
                     },{
                         id: 'card-2',
-                        items:[]
+                        items:[],
+                        layout:'fit'
                     }]
                     
                 });
@@ -212,8 +218,6 @@
             });
 
         </script>
-
         <div id = "test"></div>
-
     </body>
 </html>
