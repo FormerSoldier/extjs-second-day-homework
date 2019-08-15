@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        <link rel = "stylesheet" type = "text/css" href="../ext-3.3.0/resources/css/ext-all.css">
+        <script type = "text/javascript" src = "../ext-3.3.0/adapter/ext/ext-base.js"></script>
+        <script type = "text/javascript" src = "../ext-3.3.0/ext-all.js"></script>
+
+        <style type="text/css">
+            #wizard .ext-el-mask{
+                background-color: #fff;
+            }
+            #card-0 span, #card-1 span, #card0ItemCopy span, #card1ItemCopy span{
+                color:#000;
+                font-size: 20px;
+            }
+            .normal{
+                padding-bottom:5px;
+                color:#ccc;
+            }
+        </style>
+    </head>
+
+    <body>
+        <script type = "text/javascript">
+            Ext.onReady(function(){
+                var createRadio = (answer) => {
+                    let raw = new Ext.form.Radio({
+                        name:'garbage',
+                        boxLabel:answer
+                    });
+                    return raw;
+                }
+
+                var createCheck = (answer) => {
+                    let raw = new Ext.form.Checkbox({
+                        name:'garbage',
+                        boxLabel:answer
+                    });
+                    return raw;
+                };
+  
+
+                var card0Item = new Ext.form.FieldSet({   
+                    id:'card0Item',
+                    xtype:'fieldset',
+                    title:'Q1: 🍅番茄酱属于以下哪种垃圾？（单选）',
+                    border:false,
+                    layout:'anchor',
+                    items:[createRadio('湿垃圾'),createRadio('干垃圾'),createRadio('有害垃圾'),createRadio('可回收物')]
+                
+                });
+
+                var card1Item = new Ext.form.FieldSet({
+                    id:'card1Item',
+                    xtype:'fieldset',
+                    title:'Q50: 王大叔出门遛狗后，哪些是正确处理狗粑粑的方法？（多选）',
+                    border:false,
+                    layout:'anchor',
+                    items:[createCheck('把粑粑用废报纸包好带回家冲掉'),
+                    createCheck('受污染的报纸按有害垃圾处理'),
+                    createCheck('没受污染的报纸按可回收垃圾处理'),
+                    createCheck('受污染的报纸浸水后当是垃圾处理')]
+                });
+                var getQ1Answer = () => {
+                    let temp = card0Item.items.items.filter(item => item.checked);
+                    if(temp == null)
+                        return [];
+                    let result = temp.map(item => {
+                        let temp = createRadio(item.boxLabel);
+                        temp.checked = true;
+                        return temp;
+                    });
+                    return result;
+                }
+                var getQ50Answer = () =>{
+                    let temp =  card1Item.items.items.filter(item => item.checked);
+                    if(temp == null)
+                        return [];
+                    let result = temp.map(item => {
+                        let temp = createCheck(item.boxLabel);
+                        temp.checked = true;
+                        return temp;
+                    });
+                    return result;
+                    
+                }
+
+                
+                var createCard3 = () => {
+                    let card2 = Ext.getCmp('card-2');
+
+                    let items1 = getQ1Answer();
+                    let items2 = getQ50Answer();
+                    let card0ItemCopy = new Ext.form.FieldSet({   
+                        id:'card0ItemCopy',
+                        xtype:'fieldset',
+                        title:'Q1: 🍅番茄酱属于以下哪种垃圾？（单选）',
+                        border:false,
+                        layout:'anchor',
+                        items:items1                 
+                    });
+                    let card1ItemCopy = new Ext.form.FieldSet({
+                        id:'card1ItemCopy',
+                        xtype:'fieldset',
+                        title:'Q50: 王大叔出门遛狗后，哪些是正确处理狗粑粑的方法？（多选）',
+                        border:false,
+                        layout:'anchor',
+                        items:items2
+                    });
+
+                    card0ItemCopy.disabled = true;
+                    card1ItemCopy.disabled = true;
+                    let card2Item = new Ext.Panel({
+                        width:400,
+                        height:400,
+                        items:[card0ItemCopy,card1ItemCopy],
+                        buttons:[
+                            {
+                                text:'submit',
+                                listeners:{
+                                    'click':function(){
+                                        Ext.Msg.alert('Message', 'Congratulation');
+                                        //Ajax提交表单
+
+                                        /*Ext.Ajax.request({
+                                        method:'POST', 
+                                        form: 'resumeForm', 
+                                        url: 'resume',
+                                        params: {
+                                            'items1': items1,
+                                            'items2': items2
+                                        }
+                                        }); */
+                                    }
+                                }
+                            }
+                            ]
+                    });
+
+                    card2.add(card2Item);
+
+                }
+
+                var navHandler = function(direction){
+                    var wizard = Ext.getCmp('wizard').layout;
+                    var prev = Ext.getCmp('move-prev');
+                    var next = Ext.getCmp('move-next');
+                    var activeId = wizard.activeItem.id;
+
+                    if(activeId == 'card-0'){
+                        if(direction == 1){
+                            wizard.setActiveItem(1);
+                            prev.setDisabled(false); 
+                        }
+                    }else if(activeId == 'card-1'){
+                        if(direction == -1){
+                            wizard.setActiveItem(0);
+                            prev.setDisabled(true);
+
+                        }else{
+                            wizard.setActiveItem(2);
+                            next.setDisabled(true);
+                            
+                            createCard3();
+                        }
+                    }else if(activeId == 'card-2'){
+                        if(direction == -1){
+                            wizard.setActiveItem(1);
+                            next.setDisabled(false);
+                        }
+                    }
+                }
+                             
+                var panel = new Ext.Panel({
+                    id: 'wizard',
+                    renderTo: 'test',
+                    layout:'card',
+                    activeItem:0,
+                    labelStyle:'position:absolute;top:0;',
+                    title:'调查问卷',
+                    width: 500,
+                    height:500,
+                    bodyStyle:'padding:15px',
+                    defaults:{
+                        border:false
+                    },
+                    bbar:[{
+                        id: 'move-prev',
+                        text: '上一步',
+                        handler: navHandler.createDelegate(this, [-1]),
+                        disabled: true
+                    },'->',{
+                        id:'move-next',
+                        text: '下一步',
+                        handler: navHandler.createDelegate(this,[1])
+                    }],
+                    items: [{
+                        id: 'card-0',
+                        items:[card0Item]
+                        
+                    },{
+                        id: 'card-1',
+                        items:[card1Item]
+                    },{
+                        id: 'card-2',
+                        items:[]
+                    }]
+                    
+                });
+                         
+            });
+
+        </script>
+
+        <div id = "test"></div>
+
+    </body>
+</html>
